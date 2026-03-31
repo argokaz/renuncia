@@ -70,6 +70,7 @@ export interface RoastResult {
   terminal_lines: string[];
   score: number;
   metrics: RoastMetrics;
+  linkedin_quotes: string[];
   verdict: string;
   replacement_by: string;
   replacement_eta: string;

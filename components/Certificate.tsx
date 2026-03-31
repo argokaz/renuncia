@@ -208,12 +208,52 @@ export default function Certificate({ result }: CertificateProps) {
             </div>
           </div>
 
+          {/* LinkedIn Quotes */}
+          {result.linkedin_quotes?.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="mt-6 glass-panel rounded-xl p-4"
+            >
+              <p className="text-xs font-mono text-slate-500 tracking-widest uppercase mb-3 flex items-center gap-2">
+                <span className="text-blue-400">in</span>
+                FRASES DETECTADAS EN SU LINKEDIN
+                <span className="ml-auto text-slate-600 normal-case tracking-normal">análisis semántico completado</span>
+              </p>
+              <div className="space-y-2">
+                {result.linkedin_quotes.map((quote, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + i * 0.15 }}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5"
+                  >
+                    <span className="text-slate-600 font-mono text-xs mt-0.5 shrink-0">"{i + 1}"</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-mono text-slate-300 italic leading-relaxed">
+                        «{quote}»
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs font-mono text-red-400/70 ml-2">
+                      {["VACÍO", "GENÉRICO", "REDUNDANTE"][i % 3]}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs font-mono text-slate-600 italic">
+                * estas frases fueron procesadas por SISTEMA-Γ en 0.003 segundos. producen 0 disrupciones verificables.
+              </p>
+            </motion.div>
+          )}
+
           {/* Verdict section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="mt-6 glass-panel rounded-xl p-4 border-l-2"
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="mt-4 glass-panel rounded-xl p-4 border-l-2"
             style={{ borderColor: scoreColor }}
           >
             <p className="text-xs font-mono text-slate-500 tracking-widest uppercase mb-2">
@@ -228,7 +268,7 @@ export default function Certificate({ result }: CertificateProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
+            transition={{ delay: 1 }}
             className="mt-3 flex items-start gap-3 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/5"
           >
             <span className="text-lg">💡</span>
@@ -294,18 +334,30 @@ export default function Certificate({ result }: CertificateProps) {
         </motion.button>
       </div>
 
-      {/* Share preview */}
+      {/* Share preview + credits */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="text-center"
+        className="text-center space-y-2"
       >
         <p className="text-xs font-mono text-slate-600">
           Comparte tu certificado · Haz que tus colegas sufran también ·{" "}
           <span style={{ color: getScoreColor(result.score) }}>
             {result.score >= 75 ? "Con amor, la IA que te reemplazó" : "Sobreviviste (por ahora)"}
           </span>
+        </p>
+        <p className="text-xs font-mono text-slate-700">
+          Inspirado en{" "}
+          <a
+            href="https://replacebyclawd.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 hover:text-cyan-500 transition-colors underline underline-offset-2"
+          >
+            replacebyclawd.com
+          </a>
+          {" "}· construido con renuncIA
         </p>
       </motion.div>
     </motion.div>
