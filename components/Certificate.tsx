@@ -321,26 +321,39 @@ export default function Certificate({ result, onReEvaluate }: CertificateProps) 
       </motion.div>
 
       {/* ── ACTIONS ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Compartir — verde */}
         <motion.button
           id="share-btn"
           onClick={handleShare}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="glass-panel border border-cyan-500/30 rounded-xl px-6 py-3.5 font-mono text-sm text-cyan-400 hover:border-cyan-400/60 hover:bg-cyan-400/5 transition-all duration-200 flex items-center justify-center gap-2"
+          className="glass-panel border border-emerald-500/40 rounded-xl px-6 py-3.5 font-mono text-sm text-emerald-400 hover:border-emerald-400/70 hover:bg-emerald-400/5 transition-all duration-200 flex items-center justify-center gap-2"
         >
           <span>🔗</span>
           COMPARTIR MI OBSOLESCENCIA
         </motion.button>
 
+        {/* Re-evaluar — azul */}
         <motion.button
           onClick={onReEvaluate}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="glass-panel border border-white/10 rounded-xl px-4 py-3.5 font-mono text-xs text-slate-500 hover:border-orange-500/30 hover:text-orange-400 transition-all duration-200 flex flex-col items-center justify-center gap-0.5"
+          className="glass-panel border border-blue-500/40 rounded-xl px-4 py-3.5 font-mono text-xs text-blue-400 hover:border-blue-400/70 hover:bg-blue-400/5 transition-all duration-200 flex flex-col items-center justify-center gap-0.5"
         >
-          <span className="flex items-center gap-1.5"><span>↺</span> RE-EVALUAR</span>
-          <span className="text-slate-700 text-[10px] normal-case">¿No estás contento con tus resultados? aquí te re-evaluamos.</span>
+          <span className="flex items-center gap-1.5 text-sm"><span>↺</span> RE-EVALUAR</span>
+          <span className="text-blue-600 text-[10px] normal-case">¿No estás contento con tus resultados?</span>
+        </motion.button>
+
+        {/* Evaluar otra víctima — slate */}
+        <motion.button
+          onClick={() => { window.history.replaceState({}, "", "/"); window.location.reload(); }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="glass-panel border border-white/10 rounded-xl px-4 py-3.5 font-mono text-xs text-slate-400 hover:border-white/20 hover:text-slate-300 transition-all duration-200 flex flex-col items-center justify-center gap-0.5"
+        >
+          <span className="flex items-center gap-1.5 text-sm"><span>🎯</span> OTRA VÍCTIMA</span>
+          <span className="text-slate-600 text-[10px] normal-case">evaluar a alguien más</span>
         </motion.button>
       </div>
 
