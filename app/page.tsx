@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Terminal, { LOADING_LINES } from "@/components/Terminal";
 import Certificate from "@/components/Certificate";
 import ParticleBackground from "@/components/ParticleBackground";
-import { RoastResult } from "@/lib/utils";
+import { RoastResult, encodeResult, decodeResult } from "@/lib/utils";
 
 type AppState = "idle" | "loading" | "terminal" | "result" | "error";
 
@@ -21,15 +21,24 @@ function HomeContent() {
   const [errorMsg, setErrorMsg] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Handle shared links
   useEffect(() => {
+    // 1. Cached result in URL → show immediately, zero API call
+    const encoded = searchParams.get("r");
+    if (encoded) {
+      const cached = decodeResult(encoded);
+      if (cached) {
+        setResult(cached);
+        setLinkedinUrl(cached.linkedin_url);
+        setState("result");
+        return;
+      }
+    }
+
+    // 2. Bare linkedin URL (old share format) → trigger analysis
     const sharedUrl = searchParams.get("url");
     if (sharedUrl) {
       setLinkedinUrl(sharedUrl);
-      // Auto-start analysis for shared links
-      setTimeout(() => {
-        handleAnalyze(sharedUrl);
-      }, 800);
+      setTimeout(() => handleAnalyze(sharedUrl), 800);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -43,7 +52,11 @@ function HomeContent() {
 
     setState("loading");
     setTerminalLines(LOADING_LINES);
+    setResult(null);
     setErrorMsg("");
+
+    // Clear any cached result from URL while analyzing
+    window.history.replaceState({}, "", `/?url=${encodeURIComponent(url)}`);
 
     try {
       const response = await fetch("/api/roast", {
@@ -63,6 +76,15 @@ function HomeContent() {
       const data: RoastResult = await response.json();
       setResult(data);
       setTerminalLines(data.terminal_lines);
+
+      // Persist result in URL — future visitors won't call the API
+      const encoded = encodeResult(data);
+      window.history.replaceState(
+        {},
+        "",
+        `/?r=${encoded}`
+      );
+
       setState("terminal");
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Error desconocido");
@@ -80,8 +102,13 @@ function HomeContent() {
     setLinkedinUrl("");
     setProfileText("");
     setErrorMsg("");
-    // Clear URL params
     window.history.replaceState({}, "", "/");
+  };
+
+  const handleReEvaluate = () => {
+    // Wipe cache, re-run analysis fresh
+    window.history.replaceState({}, "", "/");
+    handleAnalyze(linkedinUrl);
   };
 
   return (
@@ -98,7 +125,8 @@ function HomeContent() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={handleReset}
           >
             <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center">
               <span className="text-cyan-400 font-mono font-bold text-xs">Γ</span>
@@ -130,7 +158,6 @@ function HomeContent() {
               exit={{ opacity: 0, y: -20 }}
               className="min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-12"
             >
-              {/* Hero badge */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -143,7 +170,6 @@ function HomeContent() {
                 </span>
               </motion.div>
 
-              {/* Main title */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -151,19 +177,13 @@ function HomeContent() {
                 className="text-center mb-4"
               >
                 <h1 className="font-mono font-black leading-none tracking-tight">
-                  <span className="block text-5xl md:text-8xl text-white">
-                    renunc
-                  </span>
-                  <span
-                    className="block text-5xl md:text-8xl glow-text-cyan"
-                    style={{ color: "#22d3ee" }}
-                  >
+                  <span className="block text-5xl md:text-8xl text-white">renunc</span>
+                  <span className="block text-5xl md:text-8xl glow-text-cyan" style={{ color: "#22d3ee" }}>
                     IA
                   </span>
                 </h1>
               </motion.div>
 
-              {/* Subtitle */}
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -182,7 +202,6 @@ function HomeContent() {
                 Análisis brutalmente honesto · Certificado oficial · Completamente gratis (como tu futura situación laboral)
               </motion.p>
 
-              {/* Input form */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -190,30 +209,24 @@ function HomeContent() {
                 className="w-full max-w-2xl"
               >
                 <div className="glass-panel-strong rounded-2xl p-6 md:p-8 space-y-4 glow-cyan">
-                  {/* URL Input */}
                   <div className="space-y-2">
                     <label className="block text-xs font-mono text-slate-500 tracking-widest uppercase">
                       URL de LinkedIn
                     </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-500 font-mono text-sm">
-                          &gt;
-                        </span>
-                        <input
-                          ref={inputRef}
-                          type="url"
-                          value={linkedinUrl}
-                          onChange={(e) => setLinkedinUrl(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                          placeholder="linkedin.com/in/tu-perfil"
-                          className="input-cyber w-full bg-white/[0.03] border border-cyan-500/20 rounded-xl pl-8 pr-4 py-3 font-mono text-sm text-white placeholder-slate-600 transition-all duration-200"
-                        />
-                      </div>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-500 font-mono text-sm">&gt;</span>
+                      <input
+                        ref={inputRef}
+                        type="url"
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
+                        placeholder="linkedin.com/in/tu-perfil"
+                        className="input-cyber w-full bg-white/[0.03] border border-cyan-500/20 rounded-xl pl-8 pr-4 py-3 font-mono text-sm text-white placeholder-slate-600 transition-all duration-200"
+                      />
                     </div>
                   </div>
 
-                  {/* Optional bio toggle */}
                   <button
                     onClick={() => setShowProfileText(!showProfileText)}
                     className="text-xs font-mono text-slate-500 hover:text-slate-400 transition-colors flex items-center gap-1.5"
@@ -241,7 +254,6 @@ function HomeContent() {
                     )}
                   </AnimatePresence>
 
-                  {/* CTA Button */}
                   <motion.button
                     onClick={() => handleAnalyze()}
                     whileHover={{ scale: 1.02 }}
@@ -257,7 +269,6 @@ function HomeContent() {
                       ANALIZAR MI REEMPLAZABILIDAD
                       <span>⚡</span>
                     </span>
-                    {/* Shimmer */}
                     <div className="absolute inset-0 shimmer opacity-50" />
                   </motion.button>
 
@@ -266,15 +277,8 @@ function HomeContent() {
                   </p>
                 </div>
 
-                {/* Sample profiles */}
                 <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                  {[
-                    "Software Engineer",
-                    "Marketing Manager",
-                    "Content Creator",
-                    "Product Manager",
-                    "Graphic Designer",
-                  ].map((role) => (
+                  {["Software Engineer", "Marketing Manager", "Content Creator", "Product Manager", "Graphic Designer"].map((role) => (
                     <span
                       key={role}
                       className="px-3 py-1 text-xs font-mono text-slate-500 border border-white/5 rounded-full glass-panel hover:border-cyan-500/20 hover:text-slate-400 transition-all cursor-default"
@@ -285,7 +289,6 @@ function HomeContent() {
                 </div>
               </motion.div>
 
-              {/* Stats ticker */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -298,9 +301,7 @@ function HomeContent() {
                   { value: "0", label: "empleos salvados" },
                 ].map(({ value, label }) => (
                   <div key={label}>
-                    <div className="text-2xl md:text-3xl font-mono font-black text-cyan-400 glow-text-cyan">
-                      {value}
-                    </div>
+                    <div className="text-2xl md:text-3xl font-mono font-black text-cyan-400 glow-text-cyan">{value}</div>
                     <div className="text-xs font-mono text-slate-600 mt-1">{label}</div>
                   </div>
                 ))}
@@ -318,7 +319,6 @@ function HomeContent() {
               className="min-h-screen flex flex-col items-center justify-center px-6 py-20"
             >
               <div className="w-full max-w-3xl space-y-6">
-                {/* Header */}
                 <div className="text-center space-y-2">
                   <motion.div
                     animate={{ opacity: [1, 0.5, 1] }}
@@ -326,19 +326,12 @@ function HomeContent() {
                     className="inline-flex items-center gap-2 px-4 py-1.5 glass-panel rounded-full border border-cyan-500/30"
                   >
                     <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                    <span className="text-xs font-mono text-cyan-400 tracking-widest">
-                      ESCANEANDO PERFIL...
-                    </span>
+                    <span className="text-xs font-mono text-cyan-400 tracking-widest">ESCANEANDO PERFIL...</span>
                   </motion.div>
-                  <h2 className="text-xl font-mono font-bold text-white">
-                    SISTEMA-Γ está analizando tu perfil
-                  </h2>
-                  <p className="text-sm font-mono text-slate-500">
-                    Preparando tu certificado de obsolescencia...
-                  </p>
+                  <h2 className="text-xl font-mono font-bold text-white">SISTEMA-Γ está analizando tu perfil</h2>
+                  <p className="text-sm font-mono text-slate-500">Preparando tu certificado de obsolescencia...</p>
                 </div>
 
-                {/* Terminal */}
                 <Terminal
                   lines={terminalLines}
                   isStreaming={state === "loading"}
@@ -346,7 +339,6 @@ function HomeContent() {
                   speed={state === "loading" ? 200 : 80}
                 />
 
-                {/* Loading indicator */}
                 {state === "loading" && (
                   <motion.div
                     className="text-center"
@@ -371,20 +363,17 @@ function HomeContent() {
               className="min-h-screen px-6 py-24"
             >
               <div className="max-w-3xl mx-auto space-y-6">
-                {/* Result header */}
                 <div className="text-center space-y-2 mb-8">
                   <p className="text-xs font-mono text-slate-500 tracking-widest uppercase">
                     ANÁLISIS COMPLETADO
                   </p>
                   <h2 className="text-2xl md:text-3xl font-mono font-bold text-white">
-                    Resultados para{" "}
-                    <span className="text-cyan-400">{result.name}</span>
+                    Resultados para <span className="text-cyan-400">{result.name}</span>
                   </h2>
                 </div>
 
-                <Certificate result={result} />
+                <Certificate result={result} onReEvaluate={handleReEvaluate} />
 
-                {/* Reset */}
                 <div className="text-center mt-4">
                   <button
                     onClick={handleReset}
@@ -406,13 +395,9 @@ function HomeContent() {
               className="min-h-screen flex flex-col items-center justify-center px-6"
             >
               <div className="w-full max-w-md text-center space-y-6">
-                <div className="text-6xl font-mono font-black text-red-500 warning-pulse">
-                  ERROR
-                </div>
+                <div className="text-6xl font-mono font-black text-red-500 warning-pulse">ERROR</div>
                 <div className="glass-panel-strong rounded-2xl p-6 border border-red-500/20">
-                  <p className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-2">
-                    FALLO DEL SISTEMA
-                  </p>
+                  <p className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-2">FALLO DEL SISTEMA</p>
                   <p className="font-mono text-sm text-slate-300">{errorMsg}</p>
                   <p className="text-xs font-mono text-slate-600 mt-3">
                     Irónicamente, este error también podría ser automatizado.
@@ -445,13 +430,9 @@ function HomeContent() {
                 renunc<span className="text-cyan-400">IA</span>
               </span>
               <span className="text-slate-700">·</span>
-              <span className="text-xs font-mono text-slate-600">
-                Una parodia. No te tomes esto en serio. O sí.
-              </span>
+              <span className="text-xs font-mono text-slate-600">Una parodia. No te tomes esto en serio. O sí.</span>
             </div>
-            <p className="text-xs font-mono text-slate-700">
-              Powered by Claude · © 2025 SISTEMA-Γ Corp
-            </p>
+            <p className="text-xs font-mono text-slate-700">Powered by GPT-4o · © 2025 SISTEMA-Γ Corp</p>
           </div>
         </footer>
       </div>
@@ -464,9 +445,7 @@ export default function Home() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <div className="font-mono text-cyan-400 animate-pulse">
-            iniciando sistema...
-          </div>
+          <div className="font-mono text-cyan-400 animate-pulse">iniciando sistema...</div>
         </div>
       }
     >

@@ -7,6 +7,7 @@ import { RoastResult, getScoreColor, getScoreLabel, getScoreEmoji } from "@/lib/
 
 interface CertificateProps {
   result: RoastResult;
+  onReEvaluate?: () => void;
 }
 
 const metricLabels: Record<string, { label: string; invert?: boolean; format?: (v: number) => string }> = {
@@ -64,20 +65,18 @@ function MetricBar({ value, label, invert, format }: { value: number; label: str
   );
 }
 
-export default function Certificate({ result }: CertificateProps) {
+export default function Certificate({ result, onReEvaluate }: CertificateProps) {
   const certRef = useRef<HTMLDivElement>(null);
   const scoreColor = getScoreColor(result.score);
   const scoreLabel = getScoreLabel(result.score);
   const scoreEmoji = getScoreEmoji(result.score);
 
   const handleShare = async () => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("url", result.linkedin_url);
-    url.searchParams.set("job", result.job_id);
+    // Use the current URL which already has ?r= encoded result
+    const shareUrl = window.location.href;
 
     try {
-      await navigator.clipboard.writeText(url.toString());
-      // Visual feedback via DOM
+      await navigator.clipboard.writeText(shareUrl);
       const btn = document.getElementById("share-btn");
       if (btn) {
         const original = btn.textContent;
@@ -91,7 +90,7 @@ export default function Certificate({ result }: CertificateProps) {
         }, 2000);
       }
     } catch {
-      prompt("Copia este link:", url.toString());
+      prompt("Copia este link:", shareUrl);
     }
   };
 
@@ -314,28 +313,39 @@ export default function Certificate({ result }: CertificateProps) {
       </div>
 
       {/* Action buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <motion.button
           id="share-btn"
           onClick={handleShare}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="glass-panel border border-cyan-500/30 rounded-xl px-6 py-3 font-mono text-sm text-cyan-400 hover:border-cyan-400/60 hover:bg-cyan-400/5 transition-all duration-200 flex items-center justify-center gap-2"
+          className="md:col-span-2 glass-panel border border-cyan-500/30 rounded-xl px-6 py-3 font-mono text-sm text-cyan-400 hover:border-cyan-400/60 hover:bg-cyan-400/5 transition-all duration-200 flex items-center justify-center gap-2"
         >
           <span>🔗</span>
           COMPARTIR MI OBSOLESCENCIA
         </motion.button>
 
         <motion.button
-          onClick={() => window.location.reload()}
+          onClick={onReEvaluate}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="glass-panel border border-white/10 rounded-xl px-6 py-3 font-mono text-sm text-slate-400 hover:border-white/20 hover:text-slate-300 transition-all duration-200 flex items-center justify-center gap-2"
+          title="Genera un nuevo análisis llamando al API"
+          className="glass-panel border border-white/10 rounded-xl px-4 py-3 font-mono text-xs text-slate-500 hover:border-orange-500/30 hover:text-orange-400 transition-all duration-200 flex items-center justify-center gap-1.5"
         >
           <span>↺</span>
-          EVALUAR OTRA VÍCTIMA
+          RE-EVALUAR
         </motion.button>
       </div>
+
+      {/* Cache notice */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        className="text-center text-xs font-mono text-slate-700"
+      >
+        Este resultado está almacenado en el link · RE-EVALUAR genera un nuevo análisis
+      </motion.p>
 
       {/* Share preview + credits */}
       <motion.div
