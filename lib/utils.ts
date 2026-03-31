@@ -62,11 +62,19 @@ export interface RoastMetrics {
   sensibilidad_al_feedback: number;
 }
 
+export interface IdentityMd {
+  creature: string;
+  vibe: string;
+  emoji: string;
+  notes: string;
+}
+
 export interface RoastResult {
   name: string;
   job_title: string;
   company: string;
   location: string;
+  identity_md: IdentityMd;
   terminal_lines: string[];
   score: number;
   metrics: RoastMetrics;
