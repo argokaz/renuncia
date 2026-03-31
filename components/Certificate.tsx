@@ -208,43 +208,46 @@ export default function Certificate({ result }: CertificateProps) {
             </div>
           </div>
 
-          {/* LinkedIn Quotes */}
+          {/* LinkedIn Quotes with commentary */}
           {result.linkedin_quotes?.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="mt-6 glass-panel rounded-xl p-4"
+              className="mt-6 space-y-3"
             >
-              <p className="text-xs font-mono text-slate-500 tracking-widest uppercase mb-3 flex items-center gap-2">
-                <span className="text-blue-400">in</span>
-                FRASES DETECTADAS EN SU LINKEDIN
-                <span className="ml-auto text-slate-600 normal-case tracking-normal">análisis semántico completado</span>
+              <p className="text-xs font-mono text-slate-500 tracking-widest uppercase flex items-center gap-2">
+                <span className="text-blue-400 font-bold">in</span>
+                ANÁLISIS DE PERFIL LINKEDIN
+                <span className="ml-auto text-slate-700 normal-case tracking-normal">procesado en 0.003s</span>
               </p>
-              <div className="space-y-2">
-                {result.linkedin_quotes.map((quote, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + i * 0.15 }}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5"
-                  >
-                    <span className="text-slate-600 font-mono text-xs mt-0.5 shrink-0">"{i + 1}"</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-mono text-slate-300 italic leading-relaxed">
-                        «{quote}»
+              {result.linkedin_quotes.map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.18 }}
+                  className="glass-panel rounded-xl overflow-hidden"
+                >
+                  {/* Quote */}
+                  <div className="px-4 pt-4 pb-3 border-b border-white/5">
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-400/60 font-mono text-lg leading-none mt-0.5">"</span>
+                      <p className="text-sm font-mono text-slate-300 italic leading-relaxed flex-1">
+                        {item.quote}
                       </p>
+                      <span className="text-blue-400/60 font-mono text-lg leading-none self-end">"</span>
                     </div>
-                    <span className="shrink-0 text-xs font-mono text-red-400/70 ml-2">
-                      {["VACÍO", "GENÉRICO", "REDUNDANTE"][i % 3]}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-              <p className="mt-3 text-xs font-mono text-slate-600 italic">
-                * estas frases fueron procesadas por SISTEMA-Γ en 0.003 segundos. producen 0 disrupciones verificables.
-              </p>
+                  </div>
+                  {/* Commentary */}
+                  <div className="px-4 py-3 flex items-start gap-3 bg-white/[0.015]">
+                    <span className="text-xs font-mono text-slate-600 shrink-0 mt-0.5">SISTEMA-Γ:</span>
+                    <p className="text-xs font-mono text-slate-400 leading-relaxed">
+                      {item.commentary}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           )}
 

@@ -30,7 +30,10 @@ Responde ÚNICAMENTE con este JSON exacto (sin markdown, sin texto adicional):
     "sensibilidad_al_feedback": 0
   },
   "linkedin_quotes": [
-    "3 citas inventadas pero absolutamente plausibles que esta persona pondría en su LinkedIn"
+    {
+      "quote": "frase real o inventada que esta persona tiene o tendría en su LinkedIn",
+      "commentary": "análisis devastador de 1-2 oraciones. Frío. Específico. Que minimice el logro o la frase al absurdo. Como un auditor de RR.HH. que no tiene tiempo para tonterías."
+    }
   ],
   "verdict": "2-3 oraciones finales. Frías. Específicas. Que duelan.",
   "replacement_by": "nombre específico de la IA/herramienta que ya lo está reemplazando",
@@ -85,6 +88,14 @@ EJEMPLOS DE BUENAS LÍNEAS:
 - sensibilidad_al_feedback: 0-100. Qué tan mal va a tomar este informe.
 
 ═══ REGLAS PARA linkedin_quotes ═══
-Inventa 3 frases que esta persona DEFINITIVAMENTE tiene o tendría en su LinkedIn. Específicas a su rol. Reconocibles. Ridículas en retrospectiva.
-Ejemplos: "Apasionado por conectar personas con propósito", "Transformando el futuro del trabajo desde adentro", "20 años de experiencia en [industria]. Nunca dejo de aprender."
+Genera exactamente 3 objetos. Cada uno con:
+- "quote": una frase que esta persona tiene o tendría en su LinkedIn. Específica a su rol e industria. Cuanto más corporativa y vacía, mejor.
+- "commentary": UN comentario devastador sobre esa frase o sobre el logro que implica. Frío, robótico, sin piedad. Minimiza el logro al absurdo. Como si una IA de RRHH leyera su expediente y no pudiera contener el desprecio.
+
+EJEMPLOS de buenos commentaries:
+- quote: "Lideré un equipo de 8 personas durante la pandemia" → commentary: "Gestionar humanos en pijama por Zoom no es liderazgo. Es supervisión de Netflix con agenda."
+- quote: "Apasionado por la innovación y el cambio" → commentary: "Pasión detectada: ninguna. Cambios implementados: estadísticamente irrelevantes. La palabra 'apasionado' aparece en el 94% de perfiles que no han innovado nada."
+- quote: "15 años de experiencia en marketing digital" → commentary: "15 años repitiendo las mismas estrategias con diferente nomenclatura. GPT-4 aprendió todo eso en 0.4 segundos. Sin almuerzo."
+- quote: "Incrementé las ventas un 23% en Q3" → commentary: "El mercado creció un 21% ese trimestre. Contribución real: 2%. Bien por usted."
+- quote: "Speaker en TEDx Lima 2019" → commentary: "TEDx. No TED. TEDx. Cualquiera puede organizar uno en un auditorio universitario con wifi inestable."
 `;
