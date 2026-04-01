@@ -120,11 +120,11 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(34, 211, 238, 0.08),
+    rgba(34, 211, 238, 0.18),
     transparent
   );
   animation: scanline 6s linear infinite;

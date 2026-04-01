@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Terminal, { LOADING_LINES } from "@/components/Terminal";
 import Certificate from "@/components/Certificate";
 import ParticleBackground from "@/components/ParticleBackground";
-import { RoastResult, encodeResult, decodeResult } from "@/lib/utils";
+import { RoastResult, encodeResult, decodeResult, getScoreColor, getScoreEmoji } from "@/lib/utils";
+import type { RecentScan } from "@/lib/recentStore";
 
 type AppState = "idle" | "loading" | "terminal" | "result" | "error";
 
@@ -17,7 +18,16 @@ function HomeContent() {
   const [result, setResult] = useState<RoastResult | null>(null);
   const [terminalLines, setTerminalLines] = useState<string[]>(LOADING_LINES);
   const [errorMsg, setErrorMsg] = useState("");
+  const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch recent scans on mount
+  useEffect(() => {
+    fetch("/api/recent")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setRecentScans(data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // Read directly from window.location — reliable at mount time
@@ -87,6 +97,12 @@ function HomeContent() {
       );
 
       setState("terminal");
+
+      // Refresh recent scans list in background
+      fetch("/api/recent")
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setRecentScans(data); })
+        .catch(() => {});
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Error desconocido");
       setState("error");
@@ -94,6 +110,7 @@ function HomeContent() {
   };
 
   const handleTerminalComplete = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setState("result");
   };
 
@@ -307,6 +324,58 @@ function HomeContent() {
                   </div>
                 ))}
               </motion.div>
+
+              {/* Recent scans */}
+              {recentScans.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="mt-16 w-full max-w-2xl"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-1 h-px bg-white/5" />
+                    <span className="text-xs font-mono text-slate-600 tracking-widest uppercase">
+                      Escaneos recientes
+                    </span>
+                    <div className="flex-1 h-px bg-white/5" />
+                  </div>
+                  <div className="space-y-2">
+                    {recentScans.map((scan, i) => {
+                      const color = getScoreColor(scan.score);
+                      return (
+                        <motion.a
+                          key={scan.job_id}
+                          href={`/?r=${scan.encoded}`}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.3 + i * 0.05 }}
+                          className="flex items-center gap-4 px-4 py-3 glass-panel rounded-xl border border-white/5 hover:border-white/10 transition-all group"
+                        >
+                          <span className="text-xl shrink-0">{scan.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-mono text-white truncate group-hover:text-cyan-300 transition-colors">
+                              {scan.name}
+                            </p>
+                            <p className="text-xs font-mono text-slate-600 truncate">
+                              {scan.job_title}{scan.company ? ` · ${scan.company}` : ""}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-lg font-mono font-black" style={{ color }}>
+                              {scan.score}
+                            </p>
+                            <p className="text-[10px] font-mono text-slate-700">obsolescencia</p>
+                          </div>
+                        </motion.a>
+                      );
+                    })}
+                  </div>
+                  <p className="text-center text-xs font-mono text-slate-700 mt-3">
+                    Haz clic en cualquier perfil para revisar su certificado
+                  </p>
+                </motion.div>
+              )}
             </motion.section>
           )}
 

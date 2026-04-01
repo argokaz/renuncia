@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ProgressRing from "./ProgressRing";
+import ShareImageModal from "./ShareImageModal";
 import { RoastResult, getScoreColor, getScoreLabel, getScoreEmoji } from "@/lib/utils";
 
 interface CertificateProps {
@@ -45,6 +46,7 @@ function MetricBar({ value, label, invert, format }: { value: number; label: str
 
 export default function Certificate({ result, onReEvaluate }: CertificateProps) {
   const certRef = useRef<HTMLDivElement>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
   const scoreColor = getScoreColor(result.score);
   const scoreLabel = getScoreLabel(result.score);
   const scoreEmoji = getScoreEmoji(result.score);
@@ -321,17 +323,28 @@ export default function Certificate({ result, onReEvaluate }: CertificateProps) 
       </motion.div>
 
       {/* ── ACTIONS ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Compartir — verde */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Copiar link — verde */}
         <motion.button
           id="share-btn"
           onClick={handleShare}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="glass-panel border border-emerald-500/40 rounded-xl px-6 py-3.5 font-mono text-sm text-emerald-400 hover:border-emerald-400/70 hover:bg-emerald-400/5 transition-all duration-200 flex items-center justify-center gap-2"
+          className="glass-panel border border-emerald-500/40 rounded-xl px-4 py-3.5 font-mono text-xs text-emerald-400 hover:border-emerald-400/70 hover:bg-emerald-400/5 transition-all duration-200 flex flex-col items-center justify-center gap-0.5"
         >
-          <span>🔗</span>
-          COMPARTIR MI OBSOLESCENCIA
+          <span className="flex items-center gap-1.5 text-sm"><span>🔗</span> COPIAR LINK</span>
+          <span className="text-emerald-700 text-[10px] normal-case">compartir resultado</span>
+        </motion.button>
+
+        {/* Compartir imagen — violeta */}
+        <motion.button
+          onClick={() => setShowShareModal(true)}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="glass-panel border border-violet-500/40 rounded-xl px-4 py-3.5 font-mono text-xs text-violet-400 hover:border-violet-400/70 hover:bg-violet-400/5 transition-all duration-200 flex flex-col items-center justify-center gap-0.5"
+        >
+          <span className="flex items-center gap-1.5 text-sm"><span>📸</span> IMAGEN</span>
+          <span className="text-violet-700 text-[10px] normal-case">Stories, Post, LinkedIn…</span>
         </motion.button>
 
         {/* Re-evaluar — azul */}
@@ -342,7 +355,7 @@ export default function Certificate({ result, onReEvaluate }: CertificateProps) 
           className="glass-panel border border-blue-500/40 rounded-xl px-4 py-3.5 font-mono text-xs text-blue-400 hover:border-blue-400/70 hover:bg-blue-400/5 transition-all duration-200 flex flex-col items-center justify-center gap-0.5"
         >
           <span className="flex items-center gap-1.5 text-sm"><span>↺</span> RE-EVALUAR</span>
-          <span className="text-blue-600 text-[10px] normal-case">¿No estás contento con tus resultados?</span>
+          <span className="text-blue-700 text-[10px] normal-case">análisis fresco</span>
         </motion.button>
 
         {/* Evaluar otra víctima — slate */}
@@ -356,6 +369,13 @@ export default function Certificate({ result, onReEvaluate }: CertificateProps) 
           <span className="text-slate-600 text-[10px] normal-case">evaluar a alguien más</span>
         </motion.button>
       </div>
+
+      {/* Share image modal */}
+      <AnimatePresence>
+        {showShareModal && (
+          <ShareImageModal result={result} onClose={() => setShowShareModal(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Credits */}
       <motion.div

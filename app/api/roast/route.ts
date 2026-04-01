@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { SYSTEM_PROMPT, buildRoastPrompt } from "@/lib/prompts";
-import { generateJobId } from "@/lib/utils";
+import { generateJobId, encodeResult, getScoreEmoji } from "@/lib/utils";
+import { addRecentScan } from "@/lib/recentStore";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -51,6 +52,20 @@ export async function POST(req: NextRequest) {
       job_id: jobId,
       generated_at: new Date().toISOString(),
     };
+
+    // Save to recent scans (best-effort, non-blocking)
+    try {
+      addRecentScan({
+        name: result.name ?? "Desconocido",
+        job_title: result.job_title ?? "",
+        company: result.company ?? "",
+        score: result.score ?? 0,
+        emoji: result.identity_md?.emoji ?? getScoreEmoji(result.score ?? 0),
+        job_id: jobId,
+        generated_at: result.generated_at,
+        encoded: encodeResult(result),
+      });
+    } catch { /* never block the response */ }
 
     return NextResponse.json(result);
   } catch (error) {

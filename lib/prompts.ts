@@ -53,7 +53,7 @@ Responde ÚNICAMENTE con este JSON (sin markdown, sin texto adicional):
 
   "verdict": "2-3 oraciones. El tono de alguien cerrando un expediente para siempre.",
   "replacement_by": "herramienta o IA específica que lo reemplaza",
-  "replacement_eta": "Q? 202?",
+  "replacement_eta": "Q? 202?",  // La fecha DEBE ser 2026 o posterior. Nunca antes de 2026.
   "fun_fact": "dato inventado y específico sobre su irrelevancia. Cuanto más absurdo y preciso, mejor.",
   "certificate_subtitle": "subtítulo burocrático para el certificado. Formal pero devastador."
 }
@@ -99,6 +99,10 @@ Sé específico. Un número redondo parece inventado. Prefiere 73 a 70, 88 a 90.
 - creature: específico a su industria y geografía si es posible. Evita lo genérico. En español.
 - vibe: como si lo describieras a alguien que lo va a contratar pero siendo honesto sobre lo que realmente hace vs. lo que dice que hace. En español.
 - notes: una sola frase. En español. Puede ser la más cruel del documento si se entrega bien.
+
+═══ REGLAS replacement_eta ═══
+La fecha de reemplazo SIEMPRE debe ser 2026 o posterior. Usa el formato "Q1 2026", "Q3 2027", etc.
+NUNCA uses fechas anteriores a 2026. El año mínimo es 2026.
 
 ═══ REGLAS linkedin_quotes ═══
 3 objetos. Las quotes deben sonar exactamente como LinkedIn — reconocibles al instante.
