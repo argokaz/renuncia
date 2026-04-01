@@ -125,17 +125,19 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
           stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
       </svg>
 
-      {/* Score number — translate(-50%,-50%) for html2canvas-safe centering.
-          Avoid inset:0 + flexbox — html2canvas doesn't reliably handle them. */}
+      {/* Score number — lineHeight==r centers text vertically without transforms
+          or flexbox. Both are unreliable in html2canvas. textAlign:center +
+          width:r handles horizontal. No position tricks — just plain CSS text. */}
       <div style={{
         position: "absolute",
-        top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)",
+        top: 0, left: 0,
+        width: r, height: r,
+        textAlign: "center",
+        lineHeight: `${r}px`,
         fontFamily: "'Courier New', Courier, monospace",
         fontSize: r * 0.40,
         fontWeight: "900",
         color: scoreColor,
-        lineHeight: 1,
         letterSpacing: "-0.05em",
         whiteSpace: "nowrap",
         textShadow: `0 0 ${r * 0.08}px ${scoreColor}, 0 0 ${r * 0.18}px ${scoreColor}60`,
