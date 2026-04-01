@@ -295,9 +295,11 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
         /* ── PORTRAIT / SQUARE ───────────────────────────── */
         <div style={{
           flex: 1, display: "flex", flexDirection: "column",
-          padding: pad,
-          justifyContent: isStories ? "space-between" : "flex-start",
-          gap: isStories ? 0 : fs(20),
+          // Stories: respect Instagram UI safe zones (top ~220px covered by status+username bar,
+          // bottom ~150px covered by reply bar). Use center so content groups toward middle.
+          padding: isStories ? `${s(260)}px ${s(68)}px ${s(200)}px` : pad,
+          justifyContent: "center",
+          gap: fs(isStories ? 18 : 20),
           position: "relative",
         }}>
           {/* Header */}
@@ -326,7 +328,7 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
           {/* Score circle */}
           <div style={{ display: "flex", justifyContent: "center" }}>
             <ScoreCircle score={result.score} scoreColor={scoreColor}
-              size={isSquare ? s(340) : s(430)} />
+              size={isSquare ? s(340) : isStories ? s(370) : s(430)} />
           </div>
 
           {/* Person */}
@@ -351,12 +353,14 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
             padding: `${fs(isSquare ? 18 : 24)}px ${fs(22)}px`,
           }}>
             <div style={{
-              fontSize: fs(isSquare ? 17 : 22),
+              fontSize: fs(isSquare ? 17 : isStories ? 20 : 22),
               color: "rgba(226,232,240,0.95)",
-              lineHeight: 1.7,
+              lineHeight: 1.65,
               fontStyle: "italic",
             }}>
-              "{result.verdict}"
+              "{isStories && result.verdict.length > 210
+                ? result.verdict.substring(0, 210) + "…"
+                : result.verdict}"
             </div>
           </div>
 
