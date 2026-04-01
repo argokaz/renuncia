@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { SYSTEM_PROMPT, buildRoastPrompt } from "@/lib/prompts";
-import { generateJobId, encodeResult, getScoreEmoji } from "@/lib/utils";
+import { generateJobId, generateShortKey, encodeResult, getScoreEmoji } from "@/lib/utils";
 import { addRecentScan } from "@/lib/recentStore";
+import { saveResult } from "@/lib/resultStore";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -46,12 +47,17 @@ export async function POST(req: NextRequest) {
     }
 
     const jobId = generateJobId();
+    const shortKey = generateShortKey(parsed.name ?? "perfil");
     const result = {
       ...parsed,
       linkedin_url,
       job_id: jobId,
+      short_key: shortKey,
       generated_at: new Date().toISOString(),
     };
+
+    // Persist result by short key for shared links
+    try { saveResult(shortKey, result); } catch { /* never block */ }
 
     // Save to recent scans (best-effort, non-blocking)
     try {
@@ -63,7 +69,7 @@ export async function POST(req: NextRequest) {
         emoji: result.identity_md?.emoji ?? getScoreEmoji(result.score ?? 0),
         job_id: jobId,
         generated_at: result.generated_at,
-        encoded: encodeResult(result),
+        encoded: `p=${shortKey}`,
       });
     } catch { /* never block the response */ }
 

@@ -16,6 +16,19 @@ export function generateJobId(): string {
   return Math.random().toString(36).substring(2, 11);
 }
 
+/** Generates a short human-readable share key, e.g. "maria-garcia-x7k2" */
+export function generateShortKey(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")  // strip diacritics
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .substring(0, 20);
+  const rand = Math.random().toString(36).substring(2, 6); // 4 random base36 chars
+  return `${slug}-${rand}`;
+}
+
 export function getScoreColor(score: number): string {
   if (score >= 80) return "#ef4444"; // red — critical
   if (score >= 60) return "#f97316"; // orange — high
@@ -76,6 +89,7 @@ export interface IdentityMd {
 }
 
 export interface RoastResult {
+  short_key?: string;  // short share key, e.g. "maria-garcia-x7k2"
   name: string;
   job_title: string;
   company: string;

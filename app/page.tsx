@@ -30,10 +30,37 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    // Read directly from window.location — reliable at mount time
     const params = new URLSearchParams(window.location.search);
 
-    // 1. Cached result in URL → show immediately, zero API call
+    // 1. Short key (?p=maria-garcia-x7k2) → fetch from server
+    const shortKey = params.get("p");
+    if (shortKey) {
+      // Try localStorage cache first (instant, works on cold starts for original device)
+      try {
+        const cached = JSON.parse(localStorage.getItem(`renuncia_result_${shortKey}`) || "null");
+        if (cached) {
+          setResult(cached);
+          setLinkedinUrl(cached.linkedin_url);
+          setState("result");
+          return;
+        }
+      } catch { /* ignore */ }
+      // Fetch from server
+      fetch(`/api/result/${shortKey}`)
+        .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+        .then((data: RoastResult) => {
+          setResult(data);
+          setLinkedinUrl(data.linkedin_url);
+          setState("result");
+        })
+        .catch(() => {
+          setErrorMsg("El resultado ya no está disponible en el servidor. Puedes analizarlo de nuevo.");
+          setState("error");
+        });
+      return;
+    }
+
+    // 2. Legacy base64 (?r=...) → decode directly
     const encoded = params.get("r");
     if (encoded) {
       const cached = decodeResult(encoded);
@@ -45,7 +72,7 @@ function HomeContent() {
       }
     }
 
-    // 2. Bare linkedin URL (old share format) → trigger analysis
+    // 3. Bare linkedin URL (old share format) → trigger analysis
     const sharedUrl = params.get("url");
     if (sharedUrl) {
       setLinkedinUrl(sharedUrl);
@@ -88,13 +115,16 @@ function HomeContent() {
       setResult(data);
       setTerminalLines(data.terminal_lines);
 
-      // Persist result in URL — future visitors won't call the API
-      const encoded = encodeResult(data);
-      window.history.replaceState(
-        {},
-        "",
-        `/?r=${encoded}`
-      );
+      // Persist result via short key (clean URL) + localStorage fallback
+      if (data.short_key) {
+        window.history.replaceState({}, "", `/?p=${data.short_key}`);
+        try {
+          localStorage.setItem(`renuncia_result_${data.short_key}`, JSON.stringify(data));
+        } catch { /* ignore */ }
+      } else {
+        // Fallback to legacy base64 if no short key
+        window.history.replaceState({}, "", `/?r=${encodeResult(data)}`);
+      }
 
       setState("terminal");
 
@@ -109,7 +139,8 @@ function HomeContent() {
           emoji: data.identity_md?.emoji ?? getScoreEmoji(data.score),
           job_id: data.job_id,
           generated_at: data.generated_at,
-          encoded: encodeResult(data),
+          // Use short key URL if available, fall back to base64
+          encoded: data.short_key ? `p=${data.short_key}` : `r=${encodeResult(data)}`,
         };
         const updated = [newScan, ...existing.filter((s) => s.job_id !== newScan.job_id)].slice(0, 10);
         localStorage.setItem("renuncia_recent", JSON.stringify(updated));
@@ -364,7 +395,7 @@ function HomeContent() {
                       return (
                         <motion.a
                           key={scan.job_id}
-                          href={`/?r=${scan.encoded}`}
+                          href={`/?${scan.encoded}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 1.3 + i * 0.05 }}
