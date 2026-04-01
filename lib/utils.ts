@@ -42,12 +42,18 @@ export function getScoreEmoji(score: number): string {
 }
 
 export function encodeResult(data: RoastResult): string {
-  return btoa(encodeURIComponent(JSON.stringify(data)));
+  // URL-safe base64: replace +→- /→_ and strip padding =
+  return btoa(encodeURIComponent(JSON.stringify(data)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 export function decodeResult(encoded: string): RoastResult | null {
   try {
-    return JSON.parse(decodeURIComponent(atob(encoded)));
+    // Restore standard base64 from URL-safe variant
+    const b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(decodeURIComponent(atob(b64)));
   } catch {
     return null;
   }

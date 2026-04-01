@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSearchParams } from "next/navigation";
 import Terminal, { LOADING_LINES } from "@/components/Terminal";
 import Certificate from "@/components/Certificate";
 import ParticleBackground from "@/components/ParticleBackground";
@@ -11,7 +10,6 @@ import { RoastResult, encodeResult, decodeResult } from "@/lib/utils";
 type AppState = "idle" | "loading" | "terminal" | "result" | "error";
 
 function HomeContent() {
-  const searchParams = useSearchParams();
   const [state, setState] = useState<AppState>("idle");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [profileText, setProfileText] = useState("");
@@ -22,8 +20,11 @@ function HomeContent() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Read directly from window.location — reliable at mount time
+    const params = new URLSearchParams(window.location.search);
+
     // 1. Cached result in URL → show immediately, zero API call
-    const encoded = searchParams.get("r");
+    const encoded = params.get("r");
     if (encoded) {
       const cached = decodeResult(encoded);
       if (cached) {
@@ -35,7 +36,7 @@ function HomeContent() {
     }
 
     // 2. Bare linkedin URL (old share format) → trigger analysis
-    const sharedUrl = searchParams.get("url");
+    const sharedUrl = params.get("url");
     if (sharedUrl) {
       setLinkedinUrl(sharedUrl);
       setTimeout(() => handleAnalyze(sharedUrl), 800);
@@ -441,15 +442,5 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="font-mono text-cyan-400 animate-pulse">iniciando sistema...</div>
-        </div>
-      }
-    >
-      <HomeContent />
-    </Suspense>
-  );
+  return <HomeContent />;
 }
