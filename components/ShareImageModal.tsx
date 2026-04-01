@@ -75,14 +75,19 @@ function makeScalers(width: number, height: number) {
 }
 
 // ─── Score circle ─────────────────────────────────────────────────────────────
-// SVG renders rings + ticks; HTML div renders the number so flex centering is
-// pixel-perfect (html2canvas ignores SVG dominantBaseline="middle").
+// Everything — rings, ticks AND the number — lives inside one SVG.
+// When html2canvas encounters an SVG it serialises the whole thing as an image,
+// so absolute SVG coordinates are preserved perfectly. No CSS layout ambiguity,
+// no flexbox, no transforms, no lineHeight tricks.
 function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: string; size: number }) {
   const r = size;
   const ringGap = r * 0.07;
   const outerR = r / 2 - ringGap;
   const innerR = outerR * 0.72;
   const cx = r / 2, cy = r / 2;
+  const fontSize = r * 0.40;
+  // Stable filter id — unique per rendered size so multiple circles don't clash
+  const filterId = `sg${Math.round(r)}`;
 
   const ticks = Array.from({ length: 24 }, (_, i) => {
     const angle = (i * 360) / 24;
@@ -100,12 +105,28 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
     };
   });
 
+  // Vertical centering without dominantBaseline (html2canvas ignores it):
+  // SVG `y` is the text baseline. Numbers have no descenders; their visual
+  // centre sits capHeight/2 above the baseline. capHeight ≈ 0.70 × fontSize.
+  // → y = cy + fontSize × 0.35  places the number's optical centre at cy.
+  const textY = cy + fontSize * 0.35;
+
   return (
-    // position:relative container — SVG for decorations, div for text
     <div style={{ width: r, height: r, position: "relative", flexShrink: 0 }}>
-      {/* Rings, ticks, crosshairs — no text here */}
       <svg width={r} height={r}
         style={{ position: "absolute", top: 0, left: 0, overflow: "visible" }}>
+        <defs>
+          {/* Glow filter — applied to the number only */}
+          <filter id={filterId} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation={r * 0.045} result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Rings */}
         <circle cx={cx} cy={cy} r={outerR}
           fill="none" stroke="rgba(34,211,238,0.35)"
           strokeWidth={r * 0.008} strokeDasharray={`${r * 0.024} ${r * 0.017}`} />
@@ -114,36 +135,34 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
         <circle cx={cx} cy={cy} r={innerR * 0.97} fill={`${scoreColor}11`} />
         <circle cx={cx} cy={cy} r={innerR}
           fill="none" stroke={scoreColor} strokeWidth={r * 0.018} strokeOpacity={0.9} />
+
+        {/* Ticks */}
         {ticks.map((t, i) => (
           <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
             stroke={t.isMajor ? "#22d3ee" : "rgba(34,211,238,0.28)"}
             strokeWidth={t.tickW} strokeLinecap="round" />
         ))}
+
+        {/* Crosshairs */}
         <line x1={cx - r * 0.1} y1={cy} x2={cx + r * 0.1} y2={cy}
           stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
         <line x1={cx} y1={cy - r * 0.1} x2={cx} y2={cy + r * 0.1}
           stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
-      </svg>
 
-      {/* Score number — lineHeight==r centers text vertically without transforms
-          or flexbox. Both are unreliable in html2canvas. textAlign:center +
-          width:r handles horizontal. No position tricks — just plain CSS text. */}
-      <div style={{
-        position: "absolute",
-        top: 0, left: 0,
-        width: r, height: r,
-        textAlign: "center",
-        lineHeight: `${r}px`,
-        fontFamily: "'Courier New', Courier, monospace",
-        fontSize: r * 0.40,
-        fontWeight: "900",
-        color: scoreColor,
-        letterSpacing: "-0.05em",
-        whiteSpace: "nowrap",
-        textShadow: `0 0 ${r * 0.08}px ${scoreColor}, 0 0 ${r * 0.18}px ${scoreColor}60`,
-      }}>
-        {score}
-      </div>
+        {/* Score number — inside SVG so coordinates are pixel-exact in html2canvas */}
+        <text
+          x={cx} y={textY}
+          textAnchor="middle"
+          fill={scoreColor}
+          fontSize={fontSize}
+          fontWeight="900"
+          fontFamily="'Courier New', Courier, monospace"
+          style={{ letterSpacing: `-${(fontSize * 0.05).toFixed(1)}px` }}
+          filter={`url(#${filterId})`}
+        >
+          {score}
+        </text>
+      </svg>
     </div>
   );
 }
