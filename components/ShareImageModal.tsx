@@ -74,7 +74,9 @@ function makeScalers(width: number, height: number) {
   return { s, fs, isLandscape, isSquare, isStories };
 }
 
-// ─── Score circle (pure SVG) ──────────────────────────────────────────────────
+// ─── Score circle ─────────────────────────────────────────────────────────────
+// SVG renders rings + ticks; HTML div renders the number so flex centering is
+// pixel-perfect (html2canvas ignores SVG dominantBaseline="middle").
 function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: string; size: number }) {
   const r = size;
   const ringGap = r * 0.07;
@@ -86,7 +88,7 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
     const angle = (i * 360) / 24;
     const isMajor = i % 6 === 0;
     const tickLen = isMajor ? r * 0.055 : r * 0.032;
-    const tickW  = isMajor ? r * 0.011 : r * 0.006;
+    const tickW   = isMajor ? r * 0.011 : r * 0.006;
     const rad  = (angle * Math.PI) / 180;
     const dist = outerR - tickLen * 0.5;
     return {
@@ -99,39 +101,61 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
   });
 
   return (
-    <svg width={r} height={r} style={{ display: "block", flexShrink: 0, overflow: "visible" }}>
-      <circle cx={cx} cy={cy} r={outerR}
-        fill="none" stroke="rgba(34,211,238,0.35)"
-        strokeWidth={r * 0.008} strokeDasharray={`${r * 0.024} ${r * 0.017}`} />
-      <circle cx={cx} cy={cy} r={outerR * 0.88}
-        fill="none" stroke="rgba(34,211,238,0.11)" strokeWidth={r * 0.004} />
-      <circle cx={cx} cy={cy} r={innerR * 0.97} fill={`${scoreColor}11`} />
-      <circle cx={cx} cy={cy} r={innerR}
-        fill="none" stroke={scoreColor} strokeWidth={r * 0.018} strokeOpacity={0.9} />
-      {ticks.map((t, i) => (
-        <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-          stroke={t.isMajor ? "#22d3ee" : "rgba(34,211,238,0.28)"}
-          strokeWidth={t.tickW} strokeLinecap="round" />
-      ))}
-      <line x1={cx - r * 0.1} y1={cy} x2={cx + r * 0.1} y2={cy}
-        stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
-      <line x1={cx} y1={cy - r * 0.1} x2={cx} y2={cy + r * 0.1}
-        stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
-      {/* Score number */}
-      <text x={cx} y={cy - r * 0.05}
-        textAnchor="middle" dominantBaseline="middle"
-        fontSize={r * 0.38} fontWeight="900" fill={scoreColor}
-        fontFamily="'Courier New', Courier, monospace" letterSpacing="-0.05em">
-        {score}
-      </text>
-      {/* SCORE label */}
-      <text x={cx} y={cy + r * 0.3}
-        textAnchor="middle" dominantBaseline="middle"
-        fontSize={r * 0.072} fill={scoreColor} opacity={0.72}
-        fontFamily="'Courier New', Courier, monospace" letterSpacing="0.14em">
-        SCORE
-      </text>
-    </svg>
+    // position:relative container — SVG for decorations, div for text
+    <div style={{ width: r, height: r, position: "relative", flexShrink: 0 }}>
+      {/* Rings, ticks, crosshairs — no text here */}
+      <svg width={r} height={r}
+        style={{ position: "absolute", top: 0, left: 0, overflow: "visible" }}>
+        <circle cx={cx} cy={cy} r={outerR}
+          fill="none" stroke="rgba(34,211,238,0.35)"
+          strokeWidth={r * 0.008} strokeDasharray={`${r * 0.024} ${r * 0.017}`} />
+        <circle cx={cx} cy={cy} r={outerR * 0.88}
+          fill="none" stroke="rgba(34,211,238,0.11)" strokeWidth={r * 0.004} />
+        <circle cx={cx} cy={cy} r={innerR * 0.97} fill={`${scoreColor}11`} />
+        <circle cx={cx} cy={cy} r={innerR}
+          fill="none" stroke={scoreColor} strokeWidth={r * 0.018} strokeOpacity={0.9} />
+        {ticks.map((t, i) => (
+          <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+            stroke={t.isMajor ? "#22d3ee" : "rgba(34,211,238,0.28)"}
+            strokeWidth={t.tickW} strokeLinecap="round" />
+        ))}
+        <line x1={cx - r * 0.1} y1={cy} x2={cx + r * 0.1} y2={cy}
+          stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
+        <line x1={cx} y1={cy - r * 0.1} x2={cx} y2={cy + r * 0.1}
+          stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
+      </svg>
+
+      {/* Score number — HTML div for pixel-perfect centering */}
+      <div style={{
+        position: "absolute", inset: 0,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        gap: r * 0.02,
+        fontFamily: "'Courier New', Courier, monospace",
+      }}>
+        <div style={{
+          fontSize: r * 0.38,
+          fontWeight: "900",
+          color: scoreColor,
+          lineHeight: 1,
+          letterSpacing: "-0.05em",
+          // Glow — same style as renuncIA logo on the landing page
+          textShadow: `0 0 ${r * 0.08}px ${scoreColor}, 0 0 ${r * 0.18}px ${scoreColor}60`,
+        }}>
+          {score}
+        </div>
+        <div style={{
+          fontSize: r * 0.072,
+          color: scoreColor,
+          opacity: 0.75,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          textShadow: `0 0 ${r * 0.04}px ${scoreColor}80`,
+        }}>
+          SCORE
+        </div>
+      </div>
+    </div>
   );
 }
 
