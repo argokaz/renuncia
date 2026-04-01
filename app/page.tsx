@@ -21,12 +21,18 @@ function HomeContent() {
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load recent scans from localStorage on mount
+  // Load global recent scans from server on mount.
+  // Show localStorage instantly as placeholder while the fetch resolves.
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("renuncia_recent");
-      if (stored) setRecentScans(JSON.parse(stored));
+      const cached = localStorage.getItem("renuncia_recent");
+      if (cached) setRecentScans(JSON.parse(cached));
     } catch { /* ignore */ }
+
+    fetch("/api/recent")
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((data: RecentScan[]) => { if (data.length > 0) setRecentScans(data); })
+      .catch(() => { /* keep localStorage fallback */ });
   }, []);
 
   useEffect(() => {
@@ -146,6 +152,12 @@ function HomeContent() {
         localStorage.setItem("renuncia_recent", JSON.stringify(updated));
         setRecentScans(updated);
       } catch { /* ignore */ }
+
+      // Refresh global ranking from server (the API already saved it)
+      fetch("/api/recent")
+        .then((r) => r.ok ? r.json() : Promise.reject())
+        .then((fresh: RecentScan[]) => { if (fresh.length > 0) setRecentScans(fresh); })
+        .catch(() => { /* keep localStorage version */ });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Error desconocido");
       setState("error");
@@ -377,8 +389,9 @@ function HomeContent() {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 h-px bg-white/5" />
-                  <span className="text-xs font-mono text-slate-600 tracking-widest uppercase">
-                    Escaneos recientes
+                  <span className="text-xs font-mono text-slate-600 tracking-widest uppercase flex items-center gap-1.5">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Víctimas recientes · Global
                   </span>
                   <div className="flex-1 h-px bg-white/5" />
                 </div>

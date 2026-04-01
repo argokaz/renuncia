@@ -2,5 +2,7 @@ import { NextResponse } from "next/server";
 import { getRecentScans } from "@/lib/recentStore";
 
 export async function GET() {
-  return NextResponse.json(getRecentScans());
+  return NextResponse.json(getRecentScans(), {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
