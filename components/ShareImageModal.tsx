@@ -59,6 +59,21 @@ const PLATFORMS: SharePlatform[] = [
   },
 ];
 
+// ─── Sarcastic rank (mirrors Certificate.tsx logic) ──────────────────────────
+const SARCASTIC_RANKS: Record<string, string[]> = {
+  critical: ["Totalmente prescindible","GPT-4 ya tiene tu escritorio","La IA cambió tus contraseñas","Tu cargo: dataset de entrenamiento","Fósil digital certificado"],
+  high:     ["Automatizable en 3… 2…","Entrenando a tu reemplazo","Guardando en /dev/null","Actualización: humano → bot","Casi un proceso batch"],
+  moderate: ["Mitad humano, mitad dataset","Candidato a piloto automático","Útil, por ahora","El algoritmo te guiña el ojo","Mejorable con un par de prompts"],
+  low:      ["Todavía relevante, aunque apenas","Anomalía: talento detectado","Resistente, pero hasta cuándo","Sobreviviente de la primera ronda","Temporalmente indispensable"],
+  minimal:  ["Error 404: reemplazabilidad no encontrada","El bot se rindió contigo","¿Eres tú o eres magia?","Irreemplazable · Anomalía del sistema","La IA te teme (un poquito)"],
+};
+function getSarcasticRank(score: number, seed: string): string {
+  const tier = score >= 90 ? "critical" : score >= 75 ? "high" : score >= 60 ? "moderate" : score >= 30 ? "low" : "minimal";
+  const phrases = SARCASTIC_RANKS[tier];
+  const hash = seed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return phrases[hash % phrases.length];
+}
+
 // ─── Scale helpers ────────────────────────────────────────────────────────────
 // s(n): scales by width (works for all formats)
 // fs(n): for portrait formats, adds a 30% boost on Stories vs Post
@@ -171,6 +186,7 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
 export function CertificateImage({ result, width, height }: { result: RoastResult; width: number; height: number }) {
   const scoreColor = getScoreColor(result.score);
   const { s, fs, isLandscape, isSquare, isStories } = makeScalers(width, height);
+  const sarcasticRank = getSarcasticRank(result.score, result.job_id);
   const pad = s(isLandscape ? 50 : 56);
 
   return (
@@ -255,7 +271,15 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
 
           {/* Main row */}
           <div style={{ flex: 1, display: "flex", gap: s(42), alignItems: "center" }}>
-            <ScoreCircle score={result.score} scoreColor={scoreColor} size={s(270)} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: s(8) }}>
+              <div style={{ fontSize: s(9), color: "rgba(100,116,139,0.7)", letterSpacing: "0.13em", textTransform: "uppercase", textAlign: "center" }}>
+                ¿Qué tan reemplazable eres?
+              </div>
+              <ScoreCircle score={result.score} scoreColor={scoreColor} size={s(270)} />
+              <div style={{ fontSize: s(11), fontWeight: "900", color: scoreColor, textAlign: "center", letterSpacing: "-0.01em" }}>
+                {sarcasticRank}
+              </div>
+            </div>
             <div style={{ width: s(1), alignSelf: "stretch", background: `linear-gradient(180deg, transparent, ${scoreColor}42, transparent)` }} />
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: s(14) }}>
               <div>
@@ -345,10 +369,18 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
             </div>
           </div>
 
-          {/* Score circle */}
-          <div style={{ display: "flex", justifyContent: "center" }}>
+          {/* Score circle + labels */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: fs(10) }}>
+            <div style={{ fontSize: fs(isSquare ? 11 : 13), color: "rgba(100,116,139,0.7)", letterSpacing: "0.14em", textTransform: "uppercase", textAlign: "center" }}>
+              ¿Qué tan reemplazable eres por la IA?
+            </div>
             <ScoreCircle score={result.score} scoreColor={scoreColor}
               size={isSquare ? s(340) : isStories ? s(370) : s(430)} />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: fs(isSquare ? 16 : 20), fontWeight: "900", color: scoreColor, letterSpacing: "-0.01em" }}>
+                {sarcasticRank}
+              </div>
+            </div>
           </div>
 
           {/* Person */}
