@@ -502,7 +502,14 @@ function HomeContent() {
               <span className="text-slate-700">·</span>
               <span className="text-xs font-mono text-slate-600">Una parodia. No te tomes esto en serio. O sí.</span>
             </div>
-            <p className="text-xs font-mono text-slate-700">Powered by GPT-4o · © 2025 SISTEMA-Γ Corp</p>
+            <p className="text-xs font-mono text-slate-700">
+              Inspirado en{" "}
+              <a href="https://replacebyclawd.com/" target="_blank" rel="noopener noreferrer"
+                className="text-slate-500 hover:text-cyan-500 transition-colors underline underline-offset-2">
+                replacebyclawd.com
+              </a>
+              {" "}· Powered by GPT-4o · hecho con amor por Arturo Goga
+            </p>
           </div>
         </footer>
       </div>
