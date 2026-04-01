@@ -21,12 +21,12 @@ function HomeContent() {
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch recent scans on mount
+  // Load recent scans from localStorage on mount
   useEffect(() => {
-    fetch("/api/recent")
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setRecentScans(data); })
-      .catch(() => {});
+    try {
+      const stored = localStorage.getItem("renuncia_recent");
+      if (stored) setRecentScans(JSON.parse(stored));
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
@@ -98,11 +98,23 @@ function HomeContent() {
 
       setState("terminal");
 
-      // Refresh recent scans list in background
-      fetch("/api/recent")
-        .then((r) => r.json())
-        .then((data) => { if (Array.isArray(data)) setRecentScans(data); })
-        .catch(() => {});
+      // Save to localStorage recent scans
+      try {
+        const existing: RecentScan[] = JSON.parse(localStorage.getItem("renuncia_recent") || "[]");
+        const newScan: RecentScan = {
+          name: data.name,
+          job_title: data.job_title,
+          company: data.company,
+          score: data.score,
+          emoji: data.identity_md?.emoji ?? getScoreEmoji(data.score),
+          job_id: data.job_id,
+          generated_at: data.generated_at,
+          encoded: encodeResult(data),
+        };
+        const updated = [newScan, ...existing.filter((s) => s.job_id !== newScan.job_id)].slice(0, 10);
+        localStorage.setItem("renuncia_recent", JSON.stringify(updated));
+        setRecentScans(updated);
+      } catch { /* ignore */ }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Error desconocido");
       setState("error");
@@ -326,20 +338,26 @@ function HomeContent() {
               </motion.div>
 
               {/* Recent scans */}
-              {recentScans.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 }}
-                  className="mt-16 w-full max-w-2xl"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex-1 h-px bg-white/5" />
-                    <span className="text-xs font-mono text-slate-600 tracking-widest uppercase">
-                      Escaneos recientes
-                    </span>
-                    <div className="flex-1 h-px bg-white/5" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2 }}
+                className="mt-16 w-full max-w-2xl"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 h-px bg-white/5" />
+                  <span className="text-xs font-mono text-slate-600 tracking-widest uppercase">
+                    Escaneos recientes
+                  </span>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+
+                {recentScans.length === 0 ? (
+                  <div className="text-center py-8 glass-panel rounded-xl border border-white/5">
+                    <p className="text-sm font-mono text-slate-600">Ningún espécimen evaluado aún.</p>
+                    <p className="text-xs font-mono text-slate-700 mt-1">Sé el primero en descubrir tu obsolescencia.</p>
                   </div>
+                ) : (
                   <div className="space-y-2">
                     {recentScans.map((scan, i) => {
                       const color = getScoreColor(scan.score);
@@ -371,11 +389,11 @@ function HomeContent() {
                       );
                     })}
                   </div>
-                  <p className="text-center text-xs font-mono text-slate-700 mt-3">
-                    Haz clic en cualquier perfil para revisar su certificado
-                  </p>
-                </motion.div>
-              )}
+                )}
+                <p className="text-center text-xs font-mono text-slate-700 mt-3">
+                  Haz clic en cualquier perfil para revisar su certificado
+                </p>
+              </motion.div>
             </motion.section>
           )}
 
