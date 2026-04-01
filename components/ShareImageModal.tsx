@@ -128,31 +128,19 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
       {/* Score number — HTML div for pixel-perfect centering */}
       <div style={{
         position: "absolute", inset: 0,
-        display: "flex", flexDirection: "column",
+        display: "flex",
         alignItems: "center", justifyContent: "center",
-        gap: r * 0.02,
         fontFamily: "'Courier New', Courier, monospace",
       }}>
         <div style={{
-          fontSize: r * 0.38,
+          fontSize: r * 0.40,
           fontWeight: "900",
           color: scoreColor,
           lineHeight: 1,
           letterSpacing: "-0.05em",
-          // Glow — same style as renuncIA logo on the landing page
           textShadow: `0 0 ${r * 0.08}px ${scoreColor}, 0 0 ${r * 0.18}px ${scoreColor}60`,
         }}>
           {score}
-        </div>
-        <div style={{
-          fontSize: r * 0.072,
-          color: scoreColor,
-          opacity: 0.75,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          textShadow: `0 0 ${r * 0.04}px ${scoreColor}80`,
-        }}>
-          SCORE
         </div>
       </div>
     </div>
