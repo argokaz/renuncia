@@ -44,12 +44,72 @@ function MetricBar({ value, label, invert, format }: { value: number; label: str
   );
 }
 
+const SARCASTIC_RANKS: Record<string, string[]> = {
+  critical: [
+    "Totalmente prescindible",
+    "GPT-4 ya tiene tu escritorio",
+    "La IA cambió tus contraseñas",
+    "Tu cargo: dataset de entrenamiento",
+    "El bot manda saludos desde tu silla",
+    "Fósil digital certificado",
+    "Obsoleto con distinción",
+  ],
+  high: [
+    "Automatizable en 3… 2…",
+    "Entrenando a tu reemplazo",
+    "Guardando en /dev/null",
+    "Actualización: humano → bot",
+    "Tu LinkedIn: manual de instrucciones",
+    "En lista para retiro forzado",
+    "Casi un proceso batch",
+  ],
+  moderate: [
+    "Mitad humano, mitad dataset",
+    "Candidato a piloto automático",
+    "Útil, por ahora",
+    "Firmando los papeles pronto",
+    "Bajo vigilancia del algoritmo",
+    "El algoritmo te guiña el ojo",
+    "Mejorable con un par de prompts",
+  ],
+  low: [
+    "Todavía relevante, aunque apenas",
+    "Monitoreado con ternura",
+    "Anomalía: talento detectado",
+    "La IA te estudia con curiosidad",
+    "Resistente, pero hasta cuándo",
+    "Sobreviviente de la primera ronda",
+    "Temporalmente indispensable",
+  ],
+  minimal: [
+    "Error 404: reemplazabilidad no encontrada",
+    "El bot se rindió contigo",
+    "Imposible de prompt-engineerear",
+    "¿Eres tú o eres magia?",
+    "Irreemplazable · Anomalía del sistema",
+    "La IA te teme (un poquito)",
+    "Demasiado humano para ser código",
+  ],
+};
+
+function getSarcasticRank(score: number, seed: string): string {
+  const tier =
+    score >= 90 ? "critical" :
+    score >= 75 ? "high" :
+    score >= 60 ? "moderate" :
+    score >= 30 ? "low" : "minimal";
+  const phrases = SARCASTIC_RANKS[tier];
+  const hash = seed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return phrases[hash % phrases.length];
+}
+
 export default function Certificate({ result, onReEvaluate }: CertificateProps) {
   const certRef = useRef<HTMLDivElement>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const scoreColor = getScoreColor(result.score);
   const scoreLabel = getScoreLabel(result.score);
   const scoreEmoji = getScoreEmoji(result.score);
+  const sarcasticRank = getSarcasticRank(result.score, result.job_id);
 
   const handleShare = async () => {
     const shareUrl = window.location.href;
@@ -154,11 +214,19 @@ export default function Certificate({ result, onReEvaluate }: CertificateProps) 
         <div className="relative p-6">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Ring */}
-            <div className="flex flex-col items-center gap-3 mx-auto md:mx-0">
-              <ProgressRing score={result.score} size={200} />
-              <p className="text-xs font-mono tracking-widest uppercase font-bold text-center" style={{ color: scoreColor }}>
-                {scoreEmoji} {scoreLabel}
+            <div className="flex flex-col items-center gap-2 mx-auto md:mx-0">
+              <p className="text-[10px] font-mono text-slate-500 tracking-[0.18em] uppercase text-center">
+                ¿Qué tan reemplazable eres por la IA?
               </p>
+              <ProgressRing score={result.score} size={200} />
+              <div className="text-center space-y-0.5">
+                <p className="text-sm font-mono font-black tracking-tight" style={{ color: scoreColor }}>
+                  {scoreEmoji} {sarcasticRank}
+                </p>
+                <p className="text-[10px] font-mono text-slate-600 tracking-widest uppercase">
+                  {scoreLabel}
+                </p>
+              </div>
             </div>
 
             {/* Info + metrics */}
