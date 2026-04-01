@@ -35,12 +35,12 @@ const PLATFORMS: SharePlatform[] = [
     getUrl: (score, name) =>
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         `Mi índice de obsolescencia es ${score}/100 🤖\n"${name}" será reemplazado por IA.\n\n¿Cuál es el tuyo?`
-      )}&url=${encodeURIComponent("https://renuncia.vercel.app")}`,
+      )}&url=${encodeURIComponent("https://renuncia.xyz")}`,
   },
   {
     id: "linkedin", label: "LinkedIn", icon: "in", color: "#0a66c2",
     getUrl: (score, name, verdict) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://renuncia.vercel.app")}&title=${encodeURIComponent(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://renuncia.xyz")}&title=${encodeURIComponent(
         `Mi índice de reemplazabilidad por IA: ${score}/100`
       )}&summary=${encodeURIComponent(
         `${verdict.substring(0, 200)}… Fíjate qué tan obsoleto eres con renuncIA.`
@@ -49,7 +49,7 @@ const PLATFORMS: SharePlatform[] = [
   {
     id: "facebook", label: "Facebook", icon: "f", color: "#1877f2",
     getUrl: (_score, _name, verdict) =>
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://renuncia.vercel.app")}&quote=${encodeURIComponent(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://renuncia.xyz")}&quote=${encodeURIComponent(
         `${verdict.substring(0, 200)}… Fíjate qué tan obsoleto eres con renuncIA.`
       )}`,
   },
@@ -274,7 +274,7 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
           }}>
             <span style={{ fontSize: s(11), color: "rgba(71,85,105,0.8)", letterSpacing: "0.05em" }}>SISTEMA-Γ · División RRHH Automatizados</span>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: s(15), color: scoreColor, fontWeight: "bold" }}>renuncia.vercel.app</div>
+              <div style={{ fontSize: s(15), color: scoreColor, fontWeight: "bold" }}>renuncia.xyz</div>
               <div style={{ fontSize: s(10), color: "rgba(71,85,105,0.6)", marginTop: s(2) }}>hecho con amor por Arturo Goga</div>
             </div>
           </div>
@@ -376,7 +376,7 @@ export function CertificateImage({ result, width, height }: { result: RoastResul
             </span>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: fs(isSquare ? 16 : 22), color: scoreColor, fontWeight: "bold", letterSpacing: "0.03em" }}>
-                renuncia.vercel.app
+                renuncia.xyz
               </div>
               <div style={{ fontSize: fs(isSquare ? 10 : 14), color: "rgba(71,85,105,0.6)", marginTop: fs(3) }}>
                 hecho con amor por Arturo Goga

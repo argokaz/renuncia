@@ -257,7 +257,7 @@ export default function Certificate({ result, onReEvaluate }: CertificateProps) 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-white/5 flex items-center justify-between">
           <p className="text-xs font-mono text-slate-600">SISTEMA-Γ · División de Recursos Humanos Automatizados</p>
-          <p className="text-xs font-mono text-slate-600 hidden md:block">renuncIA.vercel.app</p>
+          <p className="text-xs font-mono text-slate-600 hidden md:block">renuncia.xyz</p>
         </div>
       </div>
 
