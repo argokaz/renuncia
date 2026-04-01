@@ -125,23 +125,22 @@ function ScoreCircle({ score, scoreColor, size }: { score: number; scoreColor: s
           stroke={`${scoreColor}33`} strokeWidth={r * 0.004} />
       </svg>
 
-      {/* Score number — HTML div for pixel-perfect centering */}
+      {/* Score number — translate(-50%,-50%) for html2canvas-safe centering.
+          Avoid inset:0 + flexbox — html2canvas doesn't reliably handle them. */}
       <div style={{
-        position: "absolute", inset: 0,
-        display: "flex",
-        alignItems: "center", justifyContent: "center",
+        position: "absolute",
+        top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
         fontFamily: "'Courier New', Courier, monospace",
+        fontSize: r * 0.40,
+        fontWeight: "900",
+        color: scoreColor,
+        lineHeight: 1,
+        letterSpacing: "-0.05em",
+        whiteSpace: "nowrap",
+        textShadow: `0 0 ${r * 0.08}px ${scoreColor}, 0 0 ${r * 0.18}px ${scoreColor}60`,
       }}>
-        <div style={{
-          fontSize: r * 0.40,
-          fontWeight: "900",
-          color: scoreColor,
-          lineHeight: 1,
-          letterSpacing: "-0.05em",
-          textShadow: `0 0 ${r * 0.08}px ${scoreColor}, 0 0 ${r * 0.18}px ${scoreColor}60`,
-        }}>
-          {score}
-        </div>
+        {score}
       </div>
     </div>
   );
